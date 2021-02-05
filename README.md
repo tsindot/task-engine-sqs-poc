@@ -100,7 +100,7 @@ Based on the url's provided under `endpoints`, submit a task to the Task Engine 
 
 ### Send Message 
 ```shell
-curl -XPOST -d@data/send-message.json \
+curl -XPOST -d@messages/send-message.json \
  http://localhost:4566/restapis/nkj1edfh40/local/_user_request_/sqs/taskSubmit
 ```
 
