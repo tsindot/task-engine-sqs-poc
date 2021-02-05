@@ -93,6 +93,14 @@ dist
 
 # Serverless directories
 .serverless/
+/data/
+
+# terraform
+.terraform.lock.hcl
+.terraform
+
+#webpack
+.webpack
 
 # FuseBox cache
 .fusebox/

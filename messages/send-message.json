@@ -1,0 +1,15 @@
+{
+  "username": "bella",
+  "year": 2021,
+  "command": "testing-sqs-with-localstack",
+  "data": {
+    "task": 12345,
+    "parameters": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  }
+}

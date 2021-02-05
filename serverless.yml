@@ -1,0 +1,94 @@
+service:
+  name: task-engine-poc-sqs
+
+# local stack config 
+
+custom:
+  region: ${self:provider.region}
+  stage: ${opt:stage, self:provider.stage}
+  prefix: ${self:custom.stage}-${self:service}
+  process: ${self:custom.prefix}-process
+  config: ${self:custom.prefix}-config
+#  sns: ${self:custom.prefix}-trigger
+#  sqs: ${self:custom.prefix}-messages
+
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+  localstack:
+    debug: true # enable or disable debugging
+    stages:
+      - local
+    host: http://localhost
+    lambda:
+      # Enable this flag to improve performance
+      mountCode: false
+    docker:
+      # Enable this flag to run "docker ..." commands as sudo
+      sudo: false
+
+plugins:
+  - serverless-localstack
+  - serverless-webpack
+  - serverless-iam-roles-per-function
+  - serverless-prune-plugin
+  - serverless-deployment-bucket
+
+provider:
+  name: aws
+  skipCredentialsValidation: true
+  stage: ${opt:stage, 'local'}
+  region: us-west-2
+  deploymentPrefix: aws-lambda
+  deploymentBucket:
+    name: ${self:service}-${opt:stage}-deploy
+  runtime: nodejs12.x
+  apiGateway:
+    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:SendMessage
+        - sqs:ReceiveMessage
+        - sqs:DeleteMessage
+      Resource:
+        - Fn::GetAtt: [ sqsTaskQueue, Arn ]
+        - Fn::GetAtt: [ sqsTaskQueueResult, Arn ]
+
+functions:
+  taskSubmit:
+    handler: handler.taskSubmit
+    events:
+      - http:
+          method: post
+          path: /sqs/taskSubmit
+  
+  taskResult:
+    handler: handler.taskResult
+    events:
+      - http:
+          method: get
+          path: /sqs/taskResult
+
+  taskWorker:
+      handler: handler.taskWorker
+      events:
+        - sqs:
+            arn:
+              Fn::GetAtt:
+                - sqsTaskQueue
+                - Arn
+
+resources:
+  Resources:
+    sqsTaskQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: sqsTaskQueue
+  
+    sqsTaskQueueResult:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: sqsTaskQueueResult

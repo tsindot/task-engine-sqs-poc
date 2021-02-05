@@ -1,0 +1,27 @@
+@startuml Task Engine POC with SQS
+!includeurl https://raw.githubusercontent.com/xuanye/plantuml-style-c4/master/core.puml
+skinparam BoxPadding 10
+
+participant "Task Submit" as TaskSubmit
+participant "Task Worker" as TaskWorker
+participant "Task Result" as TaskResult
+
+title Task Engine POC with SQS
+
+actor User
+
+box "Task Engine"
+    participant TaskSubmit
+    participant TaskWorker
+    participant TaskResult
+end box
+
+
+User -> TaskSubmit: Submit Task
+TaskSubmit -> User: Task Confirmation
+TaskSubmit -> TaskWorker: Publish Task to sqsTaskQueue
+TaskWorker -> TaskResult: Publish results to sqsTaskResultQueue
+User -> TaskResult: GET (check for results)
+TaskResult -> User: Task Result Data
+
+@enduml
