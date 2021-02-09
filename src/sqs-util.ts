@@ -1,13 +1,20 @@
 import { Context } from 'aws-lambda';
 import { SQS, AWSError } from 'aws-sdk';
 import { ReceiveMessageResult, Message } from 'aws-sdk/clients/sqs';
+import { PromiseResult } from 'aws-sdk/lib/request';
+
 
 export class SQSUtil {
-  private sqs = new SQS();
+  private sqs = new SQS({endpoint: `http://${process.env.LOCALSTACK_HOSTNAME}:4566`})
 
   sendMessage = async (messageBody: string, messageAttributes = {},
     queueName: string, context: Context) => {
-    const queueUrl = this.getQueueUrl(queueName, context)
+
+    const queueUrl = await this.getQueueUrl(queueName, this.sqs);
+
+    this.dumpEnv();
+    console.log(`sending message to queueUrl: ${queueUrl}`);
+    console.log(`LOCALSTACK_HOSTNAME : ${process.env.LOCALSTACK_HOSTNAME}`)
 
     const data = await this.sqs.sendMessage({
       QueueUrl: queueUrl,
@@ -22,7 +29,8 @@ export class SQSUtil {
 
 
   getMessages = async (queueName: string, context: Context) => {
-    const queueUrl = this.getQueueUrl(queueName, context)
+    const queueUrl = await this.getQueueUrl(queueName, this.sqs);
+
     const params = {
       AttributeNames: ["SentTimestamp"],
       MaxNumberOfMessages: 1,
@@ -66,17 +74,17 @@ export class SQSUtil {
     return messages;
   }
 
-
-  private getQueueUrl = (queueName: string, context: Context): string => {
-    const region = context.invokedFunctionArn.split(':')[3];
-    const accountId = context.invokedFunctionArn.split(':')[4];
-
-    console.log(`localstack_hostname : ${process.env.LOCALSTACK_HOSTNAME}`);
-
-    if (process.env.NODE_ENV == 'local') 
-      return `http://${process.env.LOCALSTACK_HOSTNAME}:4566/000000000000/${queueName}`;
-    else 
-      return `https://sqs.${region}.amazonaws.com/${accountId}/${queueName}`;
+  private getQueueUrl = async (queue: string) => {
+    const response : PromiseResult<SQS.Types.GetQueueUrlResult, AWSError>= await this.sqs.getQueueUrl({
+      QueueName: queue
+    }).promise();
+    return response.QueueUrl
   }
 
+  private dumpEnv() {
+    const env = process.env;
+    Object.keys(env).forEach(function(key) {
+      console.log(`export ${key} = "${env[key]}"`);
+    });
+  }
 }
