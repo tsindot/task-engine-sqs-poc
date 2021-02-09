@@ -10,7 +10,7 @@ export class SQSUtil {
   sendMessage = async (messageBody: string, messageAttributes = {},
     queueName: string, context: Context) => {
 
-    const queueUrl = await this.getQueueUrl(queueName, this.sqs);
+    const queueUrl = await this.getQueueUrl(queueName);
 
     this.dumpEnv();
     console.log(`sending message to queueUrl: ${queueUrl}`);
@@ -29,7 +29,7 @@ export class SQSUtil {
 
 
   getMessages = async (queueName: string, context: Context) => {
-    const queueUrl = await this.getQueueUrl(queueName, this.sqs);
+    const queueUrl = await this.getQueueUrl(queueName);
 
     const params = {
       AttributeNames: ["SentTimestamp"],
