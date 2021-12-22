@@ -22,6 +22,8 @@ services:
       - KINESIS_ERROR_PROBABILITY=${KINESIS_ERROR_PROBABILITY- }
       - DOCKER_HOST=unix:///var/run/docker.sock
       - LS_LOG=debug
+      # LAMBDA_DOCKER_NETWORK=localstack-net
+      # HOSTNAME_EXTERNAL=localstack
 
       # DOCKER_CMD="sudo docker"
       # Use these if mounting from local drive in serverless.yml
